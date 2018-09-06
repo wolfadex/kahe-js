@@ -1,15 +1,21 @@
 import { parse } from 'acorn';
-import { CHANGE_CODE } from './types';
+import { CHANGE_CODE, CREATE_VARIABLE } from './types';
 
 const initialState = {
   code: '',
-  ast: parse(''),
+  testAst: parse(''),
+  ast: {
+    type: 'Program',
+    start: 0,
+    body: [],
+    sourceType: 'script',
+  },
 };
 
 export default (state = initialState, { type, ...payload }) => {
   switch (type) {
     case CHANGE_CODE: {
-      let newAst = state.ast;
+      let newAst = state.testAst;
 
       try {
         newAst = parse(payload.code);
@@ -20,9 +26,37 @@ export default (state = initialState, { type, ...payload }) => {
       return {
         ...state,
         code: payload.code,
-        ast: newAst,
+        testAst: newAst,
       };
     }
+    case CREATE_VARIABLE:
+      return {
+        ...state,
+        ast: {
+          ...state.ast,
+          body: [
+            ...state.ast.body,
+            {
+              type: 'VariableDeclaration',
+              kind: 'const',
+              declarations: [
+                {
+                  type: 'VariableDeclarator',
+                  id: {
+                    type: 'Identifier',
+                    name: payload.name,
+                  },
+                  init: {
+                    type: 'Literal', // TODO: double check, I think this can be other things
+                    value: payload.value,
+                    raw: `${payload.value}`,
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      }
     default:
       return state;
   }

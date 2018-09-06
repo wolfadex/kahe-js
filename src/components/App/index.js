@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
-import styled, { css } from 'react-emotion';
+import styled from 'react-emotion';
 import TextCode from '../TextCode';
+import GraphCode from '../GraphCode';
 
 const Container = styled('div')`
   bottom: 0;
@@ -11,18 +12,12 @@ const Container = styled('div')`
   display: flex;
 `;
 
-const styleGraphInput = css`
-  flex: 1;
-`;
-
 export default class App extends Component {
   render() {
     return (
       <Container>
         <TextCode />
-        <div className={styleGraphInput}>
-          Graph
-        </div>
+        <GraphCode />
       </Container>
     );
   }

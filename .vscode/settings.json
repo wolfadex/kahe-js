@@ -1,5 +1,6 @@
 {
   "javascript.validate.enable": true,
   "flow.useNPMPackagedFlow": false,
-  "flow.enabled": false
+  "flow.enabled": false,
+  "javascript.implicitProjectConfig.experimentalDecorators": true
 }
