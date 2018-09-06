@@ -1,10 +1,22 @@
 import React, { Component } from 'react';
-import styled from 'react-emotion';
+import styled, { css } from 'react-emotion';
 import { connect } from 'react-redux';
 import { generate } from 'astring';
-import VariableModal from '../VariableModal';
+import { createVariable, selectVariable } from '../../store/code/actions';
+import PropertiesPanel from '../PropertiesPanel';
 
 const Container = styled('div')`
+  display: flex;
+  flex: 1;
+`;
+
+const Variables = styled('div')`
+  display: flex;
+  flex-direction: column;
+  width: 10rem;
+`;
+
+const Graph = styled('div')`
   flex: 1;
 `;
 
@@ -13,10 +25,15 @@ const mapStateToProps = ({ code: { ast, testAst } }) => ({
   testAst,
 });
 
-@connect(mapStateToProps)
+const mapDispatchToProps = {
+  createVariable,
+  selectVariable,
+};
+
+@connect(mapStateToProps, mapDispatchToProps)
 export default class GraphCode extends Component {
   state = {
-    showNewVariableModal: false,
+    selectedVariable: null,
   }
 
   render() {
@@ -24,53 +41,65 @@ export default class GraphCode extends Component {
       ast,
     } = this.props;
     const {
-      showNewVariableModal,
+      selectedVariable,
     } = this.state;
 
     return (
       <Container>
-        {
-          showNewVariableModal &&
-          <VariableModal handleClose={this.handleVariableModalClose} />
-        }
-        <button onClick={this.handleLogging}>
-          Log AST and JS
-        </button>
-        <b>
-          Variables
-        </b>
-        {ast.body.map((token) => {
-          if (token.type === 'VariableDeclaration') {
-            if (token.declarations[0].type === 'VariableDeclarator') {
-              return (
-                <div>
-                  {token.declarations[0].id.name}:
-                  {token.declarations[0].init.value},
-                  {typeof token.declarations[0].init.value}
-                </div>
-              );
+        <Variables>
+          <button onClick={this.handleLogging}>
+            Log AST and JS
+          </button>
+          <b>
+            Variables
+          </b>
+          {ast.body.map((token) => {
+            if (token.type === 'VariableDeclaration') {
+              if (token.declarations[0].type === 'VariableDeclarator') {
+                return (
+                  <div
+                    onClick={this.handleVariableClick(token.declarations[0].id.name)}
+                    className={css`
+                      background-color: ${(() => {
+                        switch (typeof token.declarations[0].init.value) {
+                          case 'string':
+                            return 'rgb(0, 255, 0)';
+                          case 'number':
+                            return 'rgb(255, 0, 0)';
+                          case 'boolean':
+                            return 'rgb(0, 0, 255)';
+                        }
+                      })()};
+                      color: white;
+                      text-align: center;
+                    `}
+                  >
+                    {token.declarations[0].id.name}
+                  </div>
+                );
+              }
             }
-          }
 
-          return null;
-        })}
-        <button onClick={this.handleNewVariable}>
-          New Variable
-        </button>
+            return null;
+          })}
+          <button onClick={this.handleNewVariable}>
+            New Variable
+          </button>
+        </Variables>
+        <Graph>
+          Graph
+        </Graph>
+        <PropertiesPanel />
       </Container>
     );
   }
 
-  handleNewVariable = () => {
-    this.setState({
-      showNewVariableModal: true,
-    });
+  handleVariableClick = (name) => () => {
+    this.props.selectVariable(name);
   }
 
-  handleVariableModalClose = () => {
-    this.setState({
-      showNewVariableModal: false,
-    });
+  handleNewVariable = () => {
+    this.props.createVariable();
   }
 
   handleLogging = () => {
